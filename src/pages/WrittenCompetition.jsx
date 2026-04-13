@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Card, Form, Table } from 'react-bootstrap';
 
@@ -132,10 +132,23 @@ function WrittenCompetition() {
 
     const navigate = useNavigate();
 
-    const [view, setView] = useState('status');
+    const [selectedView, setSelectedView] = useState('status');
     const [selectedLanguage, setSelectedLanguage] = useState('ALL');
     const [sortColumn, setSortColumn] = useState('teamID');
     const [sortDirection, setSortDirection] = useState('asc');
+
+    useEffect(() => {
+        const savedReturnState = sessionStorage.getItem('writtenResultsReturnState');
+        if (!savedReturnState) return; 
+
+        const parsedReturnState = JSON.parse(savedReturnState); 
+        setSelectedView(parsedReturnState.selectedView);
+        setSelectedLanguage(parsedReturnState.selectedLanguage); 
+        setSortColumn('teamID'); 
+        setSortDirection('asc'); 
+
+        sessionStorage.removeItem('writtenResultsReturnState'); 
+    }, []);
 
     const sortedSubmissionData = [...submissionData].sort((firstTeam, secondTeam) => {
         const firstTeamID = Number(firstTeam.teamID);
@@ -172,10 +185,20 @@ function WrittenCompetition() {
     }
 
     const handleShowResults = () => {
-        setView('results');
+        setSelectedView('results');
         setSelectedLanguage('ALL');
         setSortColumn('teamID');
         setSortDirection('asc');
+    }
+
+    const handleTeamClick = (teamID) => {
+        const returnState = {
+            selectedView, 
+            selectedLanguage
+        };
+
+        sessionStorage.setItem('writtenResultsReturnState', JSON.stringify(returnState)); 
+        navigate(`/written/team/${teamID}`);
     }
 
     return (
@@ -187,15 +210,15 @@ function WrittenCompetition() {
             <div className='px-4 mb-3'>
                 <div className='row g-2'>
                     <div className='col-6'>
-                        <Button className='w-100' active={view === 'status'} onClick={() => setView('status')}>Submission Status</Button>
+                        <Button className='w-100' active={selectedView === 'status'} onClick={() => setSelectedView('status')}>Submission Status</Button>
                     </div>
                     <div className='col-6'>
-                        <Button className='w-100' active={view === 'results'} onClick={handleShowResults}>Results</Button>
+                        <Button className='w-100' active={selectedView === 'results'} onClick={handleShowResults}>Results</Button>
                     </div>
                 </div>
             </div>
 
-            {view === 'results' && (
+            {selectedView === 'results' && (
                 <div className='px-4 mb-3'>
                     <Form.Group>
                         <Form.Label className='fw-bold'>Filter by Language</Form.Label>
@@ -210,7 +233,7 @@ function WrittenCompetition() {
             )}
 
             <div className='px-4'>
-                {view === 'status' && (
+                {selectedView === 'status' && (
                     <Table striped bordered hover>
                         <thead>
                             <tr>
@@ -235,7 +258,7 @@ function WrittenCompetition() {
                     </Table>
                 )}
 
-                {view === 'results' && (
+                {selectedView === 'results' && (
                     <Table striped bordered hover>
                         <thead>
                             <tr>
@@ -249,7 +272,7 @@ function WrittenCompetition() {
                         </thead>
                         <tbody>
                             {sortedResultsData.map((currentTeam) => (
-                                <tr key={currentTeam.teamID} onClick={() => navigate(`/written/team/${currentTeam.teamID}`)} style={{ cursor: 'pointer' }}>
+                                <tr key={currentTeam.teamID} onClick={() => handleTeamClick(currentTeam.teamID)} style={{ cursor: 'pointer' }}>
                                     <td>{currentTeam.teamID}</td>
                                     <td>{currentTeam.universityName}</td>
                                     <td>{currentTeam.teamLanguage}</td>
