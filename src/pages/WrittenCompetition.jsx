@@ -249,7 +249,7 @@ function WrittenCompetition() {
                         </thead>
                         <tbody>
                             {sortedResultsData.map((currentTeam) => (
-                                <tr key={currentTeam.teamID}>
+                                <tr key={currentTeam.teamID} onClick={() => navigate(`/written/team/${currentTeam.teamID}`)} style={{ cursor: 'pointer' }}>
                                     <td>{currentTeam.teamID}</td>
                                     <td>{currentTeam.universityName}</td>
                                     <td>{currentTeam.teamLanguage}</td>
