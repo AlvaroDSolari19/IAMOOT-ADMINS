@@ -47,17 +47,55 @@ function Preliminaries() {
         }
     ];
 
+    const preliminaryResults = [
+        {
+            teamID: '12',
+            universityName: 'Universidad de Buenos Aires',
+            numberOfWins: 2,
+            numberOfLosses: 0,
+            memorandumAverage: 87.85
+        },
+        {
+            teamID: '3',
+            universityName: 'Harvard University',
+            numberOfWins: 2,
+            numberOfLosses: 0,
+            memorandumAverage: 90.75
+        },
+        {
+            teamID: '27',
+            universityName: 'Universidade de São Paulo',
+            numberOfWins: 1,
+            numberOfLosses: 1,
+            memorandumAverage: 83.25
+        },
+        {
+            teamID: '1',
+            universityName: 'Georgetown University',
+            numberOfWins: 1,
+            numberOfLosses: 1,
+            memorandumAverage: 89.6
+        },
+        {
+            teamID: '18',
+            universityName: 'Universidad Complutense de Madrid',
+            numberOfWins: 0,
+            numberOfLosses: 2,
+            memorandumAverage: 88.55
+        }
+    ];
+
     const navigate = useNavigate();
 
     const [selectedView, setSelectedView] = useState('matches');
     const [selectedDay, setSelectedDay] = useState('ALL');
 
     useEffect(() => {
-        const savedSelectedDay = sessionStorage.getItem('preliminaryMatchesSelectedDay'); 
-        if (!savedSelectedDay) return; 
+        const savedSelectedDay = sessionStorage.getItem('preliminaryMatchesSelectedDay');
+        if (!savedSelectedDay) return;
 
-        setSelectedDay(savedSelectedDay); 
-        sessionStorage.removeItem('preliminaryMatchesSelectedDay'); 
+        setSelectedDay(savedSelectedDay);
+        sessionStorage.removeItem('preliminaryMatchesSelectedDay');
     }, []);
 
     const filteredMatches = preliminaryMatches.filter((currentMatch) => {
@@ -68,9 +106,23 @@ function Preliminaries() {
         return currentMatch.matchDay === selectedDay;
     });
 
-    const handleMatchClick = (matchID) => { 
-        sessionStorage.setItem('preliminaryMatchesSelectedDay', selectedDay); 
+    const handleMatchClick = (matchID) => {
+        sessionStorage.setItem('preliminaryMatchesSelectedDay', selectedDay);
         navigate(`/oral/preliminaries/match/${matchID}`);
+    }
+
+    const sortedResults = [...preliminaryResults].sort((firstTeam, secondTeam) => {
+        if (firstTeam.numberOfWins !== secondTeam.numberOfWins) {
+            return secondTeam.numberOfWins - firstTeam.numberOfWins; 
+        }
+
+        return secondTeam.memorandumAverage - firstTeam.memorandumAverage; 
+    });
+
+    const getRowClass = (currentTeam) => {
+        if (currentTeam.numberOfWins === 2) return 'table-success'; 
+        if (currentTeam.numberOfLosses === 2) return 'table-danger';
+        return 'table-warning';  
     }
 
     return (
@@ -126,7 +178,7 @@ function Preliminaries() {
                                         <td>{currentMatch.victimUniversity} ({currentMatch.victimTeamID})</td>
                                         <td>{currentMatch.matchDay} at {currentMatch.matchTime}</td>
                                         <td>{currentMatch.matchClassroom}</td>
-                                        <td>{currentMatch.winningTeamID ? 'Selected' : 'Pending' }</td>
+                                        <td>{currentMatch.winningTeamID ? 'Selected' : 'Pending'}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -135,11 +187,34 @@ function Preliminaries() {
                 )}
 
                 {selectedView === 'results' && (
-                    <p>Preliminary results table will go here.</p>
+                    <Table striped bordered hover>
+                        <thead>
+                            <tr>
+                                <th>Team ID</th>
+                                <th>University</th>
+                                <th>Wins</th>
+                                <th>Losses</th>
+                                <th>Memorandum Average</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {sortedResults.map((currentTeam) => (
+                                <tr key={currentTeam.teamID} className={getRowClass(currentTeam)}>
+                                    <td>{currentTeam.teamID}</td>
+                                    <td>{currentTeam.universityName}</td>
+                                    <td>{currentTeam.numberOfWins}</td>
+                                    <td>{currentTeam.numberOfLosses}</td>
+                                    <td>{currentTeam.memorandumAverage}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </Table>
                 )}
             </div>
 
             <div className='d-grid gap-3 px-4'>
+                <Button onClick={() => navigate('/oral')}>Return to Oral Competition</Button>
                 <Button variant='danger' onClick={() => navigate('/')}>Logout</Button>
             </div>
 
