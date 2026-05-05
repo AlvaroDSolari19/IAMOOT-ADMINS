@@ -6,6 +6,8 @@ import WrittenCompetition from './pages/WrittenCompetition';
 import WrittenTeamDetails from './pages/WrittenTeamDetails';
 import OralCompetition from './pages/OralCompetition';
 import Preliminaries from './pages/Preliminaries';
+import Semifinals from './pages/Semifinals';
+import PreliminaryMatchDetails from './pages/PreliminaryMatchDetails';
 
 function App() {
   return (
@@ -15,6 +17,8 @@ function App() {
         <Route path='/home' element={<Home />} />
         <Route path='/oral' element={<OralCompetition />} />
         <Route path='/oral/preliminaries' element={<Preliminaries />} />
+        <Route path='/oral/preliminaries/match/:matchID' element={<PreliminaryMatchDetails />} /> 
+        <Route path='/oral/semifinals' element={<Semifinals />} />
         <Route path='/written' element={<WrittenCompetition />} />
         <Route path='written/team/:teamID' element={<WrittenTeamDetails />} />
       </Routes>
