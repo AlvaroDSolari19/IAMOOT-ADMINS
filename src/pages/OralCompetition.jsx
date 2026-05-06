@@ -13,7 +13,8 @@ function OralCompetition() {
             <div className='d-grid gap-3 px-4'>
                 <Button onClick={() => navigate('/oral/preliminaries')}>Preliminaries</Button>
                 <Button onClick={() => navigate('/oral/semifinals')}>Semifinals</Button>
-                <Button onClick={() => navigate('/oral-competition/individual-awards')}>Individual Awards</Button>
+                <Button onClick={() => navigate('/oral/individual-awards')}>Individual Awards</Button>
+                <Button onClick={() => navigate('/home')}>Return to Competition Selection</Button>
                 <Button variant='danger' onClick={() => navigate('/')}>Logout</Button>
             </div>
         </div>

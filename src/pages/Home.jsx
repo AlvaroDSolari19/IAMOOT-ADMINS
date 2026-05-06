@@ -6,7 +6,7 @@ function Home(){
 
     return <div>
         <Card className='text-center mb-3'>
-            <Card.Header as='h1' className='display-5 fw-bold'>IAMOOT 2026 - Select Competition</Card.Header>
+            <Card.Header as='h1' className='display-5 fw-bold'>Select Competition</Card.Header>
         </Card>
 
         <div className='d-grid gap-3 px-4'>

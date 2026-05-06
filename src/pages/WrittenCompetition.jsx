@@ -287,6 +287,7 @@ function WrittenCompetition() {
             </div>
 
             <div className='d-grid gap-3 px-4'>
+                <Button onClick={() => navigate('/home')}>Return to Competition Selection</Button>
                 <Button variant='danger' onClick={() => navigate('/')}>Logout</Button>
             </div>
         </div>
