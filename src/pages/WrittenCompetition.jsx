@@ -2,66 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Card, Form, Table } from 'react-bootstrap';
 
-function WrittenCompetition() {
+import api from '../services/api';
 
-    const submissionData = [
-        {
-            teamID: '12',
-            universityName: 'Universidad de Buenos Aires',
-            teamLanguage: 'ES',
-            stateStatus: 'Submitted',
-            victimStatus: 'Pending'
-        },
-        {
-            teamID: '3',
-            universityName: 'Harvard University',
-            teamLanguage: 'EN',
-            stateStatus: 'Submitted',
-            victimStatus: 'Submitted'
-        },
-        {
-            teamID: '27',
-            universityName: 'Universidade de São Paulo',
-            teamLanguage: 'POR',
-            stateStatus: 'Pending',
-            victimStatus: 'Submitted'
-        },
-        {
-            teamID: '1',
-            universityName: 'Georgetown University',
-            teamLanguage: 'EN',
-            stateStatus: 'Submitted',
-            victimStatus: 'Submitted'
-        },
-        {
-            teamID: '18',
-            universityName: 'Universidad Complutense de Madrid',
-            teamLanguage: 'ES',
-            stateStatus: 'Pending',
-            victimStatus: 'Pending'
-        },
-        {
-            teamID: '9',
-            universityName: 'University of Oxford',
-            teamLanguage: 'EN',
-            stateStatus: 'Submitted',
-            victimStatus: 'Pending'
-        },
-        {
-            teamID: '21',
-            universityName: 'Pontifícia Universidade Católica do Rio de Janeiro',
-            teamLanguage: 'POR',
-            stateStatus: 'Submitted',
-            victimStatus: 'Submitted'
-        },
-        {
-            teamID: '6',
-            universityName: 'Universidad de Chile',
-            teamLanguage: 'ES',
-            stateStatus: 'Submitted',
-            victimStatus: 'Submitted'
-        }
-    ]
+function WrittenCompetition() {
 
     const resultsData = [
         {
@@ -137,17 +80,37 @@ function WrittenCompetition() {
     const [sortColumn, setSortColumn] = useState('teamID');
     const [sortDirection, setSortDirection] = useState('asc');
 
+    const [submissionData, setSubmissionData] = useState([]);
+    const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(true);
+    const [submissionError, setSubmissionError] = useState('');
+
     useEffect(() => {
         const savedReturnState = sessionStorage.getItem('writtenResultsReturnState');
-        if (!savedReturnState) return; 
+        if (!savedReturnState) return;
 
-        const parsedReturnState = JSON.parse(savedReturnState); 
+        const parsedReturnState = JSON.parse(savedReturnState);
         setSelectedView(parsedReturnState.selectedView);
-        setSelectedLanguage(parsedReturnState.selectedLanguage); 
-        setSortColumn('teamID'); 
-        setSortDirection('asc'); 
+        setSelectedLanguage(parsedReturnState.selectedLanguage);
+        setSortColumn('teamID');
+        setSortDirection('asc');
 
-        sessionStorage.removeItem('writtenResultsReturnState'); 
+        sessionStorage.removeItem('writtenResultsReturnState');
+    }, []);
+
+    useEffect(() => {
+        const getSubmissionData = async () => {
+            try {
+                const submissionResponse = await api.get('/api/admin/written/submissions');
+                setSubmissionData(submissionResponse.data.submissions || []);
+            } catch (error) {
+                console.error('Written submission status error: ', error);
+                setSubmissionError('Unable to retrieve written submission status');
+            } finally {
+                setIsLoadingSubmissions(false);
+            }
+        }
+
+        getSubmissionData();
     }, []);
 
     const sortedSubmissionData = [...submissionData].sort((firstTeam, secondTeam) => {
@@ -181,7 +144,7 @@ function WrittenCompetition() {
 
     const handleSort = (columnName) => {
         setSortColumn(columnName);
-        setSortDirection('desc'); 
+        setSortDirection('desc');
     }
 
     const handleShowResults = () => {
@@ -193,11 +156,11 @@ function WrittenCompetition() {
 
     const handleTeamClick = (teamID) => {
         const returnState = {
-            selectedView, 
+            selectedView,
             selectedLanguage
         };
 
-        sessionStorage.setItem('writtenResultsReturnState', JSON.stringify(returnState)); 
+        sessionStorage.setItem('writtenResultsReturnState', JSON.stringify(returnState));
         navigate(`/written/team/${teamID}`);
     }
 
@@ -232,30 +195,42 @@ function WrittenCompetition() {
                 </div>
             )}
 
+            {isLoadingSubmissions && (
+                <p className='text-center fw-semibold'>Loading submission status...</p>
+            )}
+
+            {submissionError && (
+                <p className='text-center text-danger fw-semibold'>{submissionError}</p>
+            )}
+
             <div className='px-4'>
                 {selectedView === 'status' && (
-                    <Table striped bordered hover>
-                        <thead>
-                            <tr>
-                                <th>Team ID</th>
-                                <th>Univeristy</th>
-                                <th>Language</th>
-                                <th>State Memorandum</th>
-                                <th>Victim Memorandum</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {sortedSubmissionData.map((currentTeam) => (
+                <Table striped bordered hover>
+                    <thead>
+                        <tr>
+                            <th>Team ID</th>
+                            <th>Univeristy</th>
+                            <th>Language</th>
+                            <th>State Memorandum</th>
+                            <th>Victim Memorandum</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {sortedSubmissionData.map((currentTeam) => {
+                            const memorandumStatus = currentTeam.hasSubmittedMemoranda ? 'Submitted' : 'Pending';
+
+                            return (
                                 <tr key={currentTeam.teamID}>
                                     <td>{currentTeam.teamID}</td>
                                     <td>{currentTeam.universityName}</td>
                                     <td>{currentTeam.teamLanguage}</td>
-                                    <td>{currentTeam.stateStatus}</td>
-                                    <td>{currentTeam.victimStatus}</td>
+                                    <td>{memorandumStatus}</td>
+                                    <td>{memorandumStatus}</td>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </Table>
+                            )
+                        })}
+                    </tbody>
+                </Table>
                 )}
 
                 {selectedView === 'results' && (
