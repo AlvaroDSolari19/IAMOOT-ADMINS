@@ -6,73 +6,6 @@ import api from '../services/api';
 
 function WrittenCompetition() {
 
-    const resultsData = [
-        {
-            teamID: '12',
-            universityName: 'Universidad de Buenos Aires',
-            teamLanguage: 'ES',
-            stateAverage: 84.5,
-            victimAverage: 91.2,
-            combinedAverage: 87.85
-        },
-        {
-            teamID: '3',
-            universityName: 'Harvard University',
-            teamLanguage: 'EN',
-            stateAverage: 93.1,
-            victimAverage: 88.4,
-            combinedAverage: 90.75
-        },
-        {
-            teamID: '27',
-            universityName: 'Universidade de São Paulo',
-            teamLanguage: 'POR',
-            stateAverage: 79.8,
-            victimAverage: 86.7,
-            combinedAverage: 83.25
-        },
-        {
-            teamID: '1',
-            universityName: 'Georgetown University',
-            teamLanguage: 'EN',
-            stateAverage: 88.9,
-            victimAverage: 90.3,
-            combinedAverage: 89.6
-        },
-        {
-            teamID: '18',
-            universityName: 'Universidad Complutense de Madrid',
-            teamLanguage: 'ES',
-            stateAverage: 91.5,
-            victimAverage: 85.6,
-            combinedAverage: 88.55
-        },
-        {
-            teamID: '9',
-            universityName: 'University of Oxford',
-            teamLanguage: 'EN',
-            stateAverage: 82.7,
-            victimAverage: 94.1,
-            combinedAverage: 88.4
-        },
-        {
-            teamID: '21',
-            universityName: 'Pontifícia Universidade Católica do Rio de Janeiro',
-            teamLanguage: 'POR',
-            stateAverage: 95.4,
-            victimAverage: 89.2,
-            combinedAverage: 92.3
-        },
-        {
-            teamID: '6',
-            universityName: 'Universidad de Chile',
-            teamLanguage: 'ES',
-            stateAverage: 87.3,
-            victimAverage: 87.3,
-            combinedAverage: 87.3
-        }
-    ];
-
     const navigate = useNavigate();
 
     const [selectedView, setSelectedView] = useState('status');
@@ -83,6 +16,10 @@ function WrittenCompetition() {
     const [submissionData, setSubmissionData] = useState([]);
     const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(true);
     const [submissionError, setSubmissionError] = useState('');
+
+    const [resultsData, setResultsData] = useState([]);
+    const [isLoadingResults, setIsLoadingResults] = useState(true);
+    const [resultsError, setResultsError] = useState('');
 
     useEffect(() => {
         const savedReturnState = sessionStorage.getItem('writtenResultsReturnState');
@@ -104,13 +41,29 @@ function WrittenCompetition() {
                 setSubmissionData(submissionResponse.data.submissions || []);
             } catch (error) {
                 console.error('Written submission status error: ', error);
-                setSubmissionError('Unable to retrieve written submission status');
+                setSubmissionError('Unable to retrieve written submission status.');
             } finally {
                 setIsLoadingSubmissions(false);
             }
         }
 
         getSubmissionData();
+    }, []);
+
+    useEffect(() => {
+        const getResultsData = async () => {
+            try {
+                const resultsResponse = await api.get('/api/admin/written/results');
+                setResultsData(resultsResponse.data.results || []);
+            } catch (error) {
+                console.error('Written results error: ', error);
+                setResultsError('Unable to retrieve written results.');
+            } finally {
+                setIsLoadingResults(false);
+            }
+        }
+
+        getResultsData();
     }, []);
 
     const sortedSubmissionData = [...submissionData].sort((firstTeam, secondTeam) => {
@@ -139,10 +92,19 @@ function WrittenCompetition() {
         const firstValue = firstTeam[sortColumn];
         const secondValue = secondTeam[sortColumn];
 
+        if (firstValue === null) return 1;
+        if (secondValue === null) return -1;
+
         return sortDirection === 'asc' ? (firstValue - secondValue) : (secondValue - firstValue)
     })
 
     const handleSort = (columnName) => {
+        if(sortColumn === columnName){
+            setSortColumn('teamID'); 
+            setSortDirection('asc');
+            return;
+        }
+        
         setSortColumn(columnName);
         setSortDirection('desc');
     }
@@ -181,83 +143,99 @@ function WrittenCompetition() {
                 </div>
             </div>
 
-            {selectedView === 'results' && (
-                <div className='px-4 mb-3'>
-                    <Form.Group>
-                        <Form.Label className='fw-bold'>Filter by Language</Form.Label>
-                        <Form.Select value={selectedLanguage} onChange={(event) => setSelectedLanguage(event.target.value)}>
-                            <option value='ALL'>All Languages</option>
-                            <option value='EN'>English</option>
-                            <option value='ES'>Español</option>
-                            <option value='POR'>Português</option>
-                        </Form.Select>
-                    </Form.Group>
-                </div>
-            )}
-
-            {isLoadingSubmissions && (
-                <p className='text-center fw-semibold'>Loading submission status...</p>
-            )}
-
-            {submissionError && (
-                <p className='text-center text-danger fw-semibold'>{submissionError}</p>
-            )}
-
             <div className='px-4'>
                 {selectedView === 'status' && (
-                <Table striped bordered hover>
-                    <thead>
-                        <tr>
-                            <th>Team ID</th>
-                            <th>Univeristy</th>
-                            <th>Language</th>
-                            <th>State Memorandum</th>
-                            <th>Victim Memorandum</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {sortedSubmissionData.map((currentTeam) => {
-                            const memorandumStatus = currentTeam.hasSubmittedMemoranda ? 'Submitted' : 'Pending';
+                    <>
+                        {isLoadingSubmissions && (
+                            <p className='text-center fw-semibold'>Loading submission status...</p>
+                        )}
 
-                            return (
-                                <tr key={currentTeam.teamID}>
-                                    <td>{currentTeam.teamID}</td>
-                                    <td>{currentTeam.universityName}</td>
-                                    <td>{currentTeam.teamLanguage}</td>
-                                    <td>{memorandumStatus}</td>
-                                    <td>{memorandumStatus}</td>
-                                </tr>
-                            )
-                        })}
-                    </tbody>
-                </Table>
+                        {submissionError && (
+                            <p className='text-center text-danger fw-semibold'>{submissionError}</p>
+                        )}
+
+                        {!isLoadingSubmissions && !submissionError && (
+                            <Table striped bordered hover>
+                                <thead>
+                                    <tr>
+                                        <th>Team ID</th>
+                                        <th>University</th>
+                                        <th>Language</th>
+                                        <th>State Memorandum</th>
+                                        <th>Victim Memorandum</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {sortedSubmissionData.map((currentTeam) => {
+                                        const memorandumStatus = currentTeam.hasSubmittedMemoranda ? 'Submitted' : 'Pending';
+
+                                        return (
+                                            <tr key={currentTeam.teamID}>
+                                                <td>{currentTeam.teamID}</td>
+                                                <td>{currentTeam.universityName}</td>
+                                                <td>{currentTeam.teamLanguage}</td>
+                                                <td>{memorandumStatus}</td>
+                                                <td>{memorandumStatus}</td>
+                                            </tr>
+                                        )
+                                    })}
+                                </tbody>
+                            </Table>
+                        )}
+                    </>
                 )}
 
                 {selectedView === 'results' && (
-                    <Table striped bordered hover>
-                        <thead>
-                            <tr>
-                                <th>Team ID</th>
-                                <th>University</th>
-                                <th>Language</th>
-                                <th onClick={() => handleSort('stateAverage')} style={{ cursor: 'pointer' }}>State Average {sortColumn === 'stateAverage' && (sortDirection === 'asc' ? '▲' : '▼')}</th>
-                                <th onClick={() => handleSort('victimAverage')} style={{ cursor: 'pointer' }}>Victim Average {sortColumn === 'victimAverage' && (sortDirection === 'asc' ? '▲' : '▼')}</th>
-                                <th onClick={() => handleSort('combinedAverage')} style={{ cursor: 'pointer' }}>Combined Average {sortColumn === 'combinedAverage' && (sortDirection === 'asc' ? '▲' : '▼')}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {sortedResultsData.map((currentTeam) => (
-                                <tr key={currentTeam.teamID} onClick={() => handleTeamClick(currentTeam.teamID)} style={{ cursor: 'pointer' }}>
-                                    <td>{currentTeam.teamID}</td>
-                                    <td>{currentTeam.universityName}</td>
-                                    <td>{currentTeam.teamLanguage}</td>
-                                    <td>{currentTeam.stateAverage}</td>
-                                    <td>{currentTeam.victimAverage}</td>
-                                    <td>{currentTeam.combinedAverage}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </Table>
+                    <>
+                        {isLoadingResults && (
+                            <p className='text-center fw-semibold'>Loading written results...</p>
+                        )}
+
+                        {resultsError && (
+                            <p className='text-center text-danger fw-semibold'>{resultsError}</p>
+                        )}
+
+                        {!isLoadingResults && !resultsError && (
+                            <>
+                                <div className='mb-3'>
+                                    <Form.Group>
+                                        <Form.Label className='fw-bold'>Filter by Language</Form.Label>
+                                        <Form.Select value={selectedLanguage} onChange={(event) => setSelectedLanguage(event.target.value)}>
+                                            <option value='ALL'>All Languages</option>
+                                            <option value='EN'>English</option>
+                                            <option value='SPA'>Spanish</option>
+                                            <option value='POR'>Portuguese</option>
+                                        </Form.Select>
+                                    </Form.Group>
+                                </div>
+
+                                <Table striped bordered hover>
+                                    <thead>
+                                        <tr>
+                                            <th>Team ID</th>
+                                            <th>University</th>
+                                            <th>Language</th>
+                                            <th onClick={() => handleSort('stateAverage')} style={{ cursor: 'pointer' }}>State Average {sortColumn === 'stateAverage' && (sortDirection === 'asc' ? '▲' : '▼')}</th>
+                                            <th onClick={() => handleSort('victimAverage')} style={{ cursor: 'pointer' }}>Victim Average {sortColumn === 'victimAverage' && (sortDirection === 'asc' ? '▲' : '▼')}</th>
+                                            <th onClick={() => handleSort('combinedAverage')} style={{ cursor: 'pointer' }}>Combined Average {sortColumn === 'combinedAverage' && (sortDirection === 'asc' ? '▲' : '▼')}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {sortedResultsData.map((currentTeam) => (
+                                            <tr key={currentTeam.teamID} onClick={() => handleTeamClick(currentTeam.teamID)} style={{ cursor: 'pointer' }}>
+                                                <td>{currentTeam.teamID}</td>
+                                                <td>{currentTeam.universityName}</td>
+                                                <td>{currentTeam.teamLanguage}</td>
+                                                <td>{currentTeam.stateAverage}</td>
+                                                <td>{currentTeam.victimAverage}</td>
+                                                <td>{currentTeam.combinedAverage}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </Table>
+                            </>
+                        )}
+                    </>
                 )}
             </div>
 
