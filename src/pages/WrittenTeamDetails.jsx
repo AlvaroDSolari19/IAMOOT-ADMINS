@@ -16,12 +16,10 @@ function WrittenTeamDetails() {
     const [isStatePenaltyFormVisible, setIsStatePenaltyFormVisible] = useState(false);
     const [statePenaltyInput, setStatePenaltyInput] = useState('');
     const [statePenaltyError, setStatePenaltyError] = useState('');
-    const [savedStatePenalty, setSavedStatePenalty] = useState(null);
 
     const [isVictimPenaltyFormVisible, setIsVictimPenaltyFormVisible] = useState(false);
     const [victimPenaltyInput, setVictimPenaltyInput] = useState('');
     const [victimPenaltyError, setVictimPenaltyError] = useState('');
-    const [savedVictimPenalty, setSavedVictimPenalty] = useState(null);
 
     useEffect(() => {
         const getTeamDetails = async () => {
@@ -39,7 +37,16 @@ function WrittenTeamDetails() {
         getTeamDetails();
     }, [teamID]);
 
-    const handleSaveStatePenalty = () => {
+    const refreshTeamDetails = async () => {
+        try {
+            const teamDetailsResponse = await api.get(`/api/admin/written/team/${teamID}`);
+            setTeamDetails(teamDetailsResponse.data);
+        } catch (error) {
+            console.error('Refresh team details error: ', error);
+        }
+    }
+
+    const handleSaveStatePenalty = async () => {
         const penaltyValue = Number(statePenaltyInput);
 
         if (!statePenaltyInput.trim()) {
@@ -52,13 +59,26 @@ function WrittenTeamDetails() {
             return;
         }
 
-        setSavedStatePenalty(penaltyValue);
-        setStatePenaltyError('');
-        setStatePenaltyInput('');
-        setIsStatePenaltyFormVisible(false);
+        try {
+            await api.patch(`/api/admin/written/team/${teamID}/penalty`, {
+                memorandumType: 'State',
+                penaltyPoints: penaltyValue
+            });
+
+            await refreshTeamDetails();
+
+            setStatePenaltyError('');
+            setStatePenaltyInput('');
+            setIsStatePenaltyFormVisible(false);
+
+        } catch (error) {
+            console.error('State penalty error: ', error);
+            setStatePenaltyError('Unable to save state memorandum penalty.');
+        }
+
     }
 
-    const handleSaveVictimPenalty = () => {
+    const handleSaveVictimPenalty = async () => {
         const penaltyValue = Number(victimPenaltyInput);
 
         if (!victimPenaltyInput.trim()) {
@@ -71,15 +91,28 @@ function WrittenTeamDetails() {
             return;
         }
 
-        setSavedVictimPenalty(penaltyValue);
-        setVictimPenaltyError('');
-        setVictimPenaltyInput('');
-        setIsVictimPenaltyFormVisible(false);
+        try {
+            await api.patch(`/api/admin/written/team/${teamID}/penalty`, {
+                memorandumType: 'Victim',
+                penaltyPoints: penaltyValue
+            });
+
+            await refreshTeamDetails();
+
+            setVictimPenaltyError('');
+            setVictimPenaltyInput('');
+            setIsVictimPenaltyFormVisible(false);
+
+        } catch (error) {
+            console.error('State penalty error: ', error);
+            setVictimPenaltyError('Unable to save victim memorandum penalty.');
+        }
+
     }
 
-    const teamRecord = teamDetails?.team; 
-    const stateMemorandum = teamDetails?.memoranda?.state; 
-    const victimMemorandum = teamDetails?.memoranda?.victim; 
+    const teamRecord = teamDetails?.team;
+    const stateMemorandum = teamDetails?.memoranda?.state;
+    const victimMemorandum = teamDetails?.memoranda?.victim;
 
     return (
         <div>
@@ -105,7 +138,7 @@ function WrittenTeamDetails() {
                             <p><strong>Penalty:</strong> {stateMemorandum?.penaltyPoints ? `-${stateMemorandum.penaltyPoints}` : 'None'}</p>
                             <p><strong>Adjusted Score:</strong> {stateMemorandum?.adjustedScore ?? 'N/A'}</p>
 
-                            {savedStatePenalty === null && !isStatePenaltyFormVisible && (
+                            {stateMemorandum && !stateMemorandum.penaltyPoints && !isStatePenaltyFormVisible && (
                                 <Button onClick={() => setIsStatePenaltyFormVisible(true)}> Add Penalty</Button>
                             )}
 
@@ -137,7 +170,7 @@ function WrittenTeamDetails() {
                             <p><strong>Penalty:</strong> {victimMemorandum?.penaltyPoints ? `-${victimMemorandum.penaltyPoints}` : 'None'}</p>
                             <p><strong>Adjusted Score:</strong> {victimMemorandum?.adjustedScore ?? 'N/A'}</p>
 
-                            {savedVictimPenalty === null && !isVictimPenaltyFormVisible && (
+                            {victimMemorandum && !victimMemorandum.penaltyPoints && !isVictimPenaltyFormVisible && (
                                 <Button onClick={() => setIsVictimPenaltyFormVisible(true)}> Add Penalty</Button>
                             )}
 
