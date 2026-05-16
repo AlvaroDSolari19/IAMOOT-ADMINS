@@ -66,6 +66,11 @@ function WrittenCompetition() {
         getResultsData();
     }, []);
 
+    const formatScore = (scoreValue) => {
+        if (scoreValue === null || scoreValue === undefined) return 'N/A';
+        return Number.isInteger(scoreValue) ? scoreValue : scoreValue.toFixed(2); 
+    }
+
     const sortedSubmissionData = [...submissionData].sort((firstTeam, secondTeam) => {
         const firstTeamID = Number(firstTeam.teamID);
         const secondTeamID = Number(secondTeam.teamID);
@@ -226,9 +231,9 @@ function WrittenCompetition() {
                                                 <td>{currentTeam.teamID}</td>
                                                 <td>{currentTeam.universityName}</td>
                                                 <td>{currentTeam.teamLanguage}</td>
-                                                <td>{currentTeam.stateAverage}</td>
-                                                <td>{currentTeam.victimAverage}</td>
-                                                <td>{currentTeam.combinedAverage}</td>
+                                                <td>{formatScore(currentTeam.stateAverage)}</td>
+                                                <td>{formatScore(currentTeam.victimAverage)}</td>
+                                                <td>{formatScore(currentTeam.combinedAverage)}</td>
                                             </tr>
                                         ))}
                                     </tbody>

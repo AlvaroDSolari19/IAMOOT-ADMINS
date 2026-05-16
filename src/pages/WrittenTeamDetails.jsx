@@ -104,7 +104,7 @@ function WrittenTeamDetails() {
             setIsVictimPenaltyFormVisible(false);
 
         } catch (error) {
-            console.error('State penalty error: ', error);
+            console.error('Victim penalty error: ', error);
             setVictimPenaltyError('Unable to save victim memorandum penalty.');
         }
 
@@ -113,6 +113,11 @@ function WrittenTeamDetails() {
     const teamRecord = teamDetails?.team;
     const stateMemorandum = teamDetails?.memoranda?.state;
     const victimMemorandum = teamDetails?.memoranda?.victim;
+
+    const formatScore = (scoreValue) => {
+        if (scoreValue === null || scoreValue === undefined) return 'N/A'; 
+        return Number.isInteger(scoreValue) ? scoreValue : scoreValue.toFixed(2); 
+    }
 
     return (
         <div>
@@ -134,9 +139,9 @@ function WrittenTeamDetails() {
                         <Card.Header as='h2' className='fw-bold'>State Memorandum Details</Card.Header>
                         <Card.Body>
                             <p><strong>Scores:</strong> {stateMemorandum?.scoreValues?.length ? stateMemorandum.scoreValues.join(', ') : 'N/A'}</p>
-                            <p><strong>Average:</strong> {stateMemorandum?.averageScore ?? 'N/A'}</p>
+                            <p><strong>Average:</strong> {formatScore(stateMemorandum?.averageScore)}</p>
                             <p><strong>Penalty:</strong> {stateMemorandum?.penaltyPoints ? `-${stateMemorandum.penaltyPoints}` : 'None'}</p>
-                            <p><strong>Adjusted Score:</strong> {stateMemorandum?.adjustedScore ?? 'N/A'}</p>
+                            <p><strong>Adjusted Score:</strong> {formatScore(stateMemorandum?.adjustedScore)}</p>
 
                             {stateMemorandum && !stateMemorandum.penaltyPoints && !isStatePenaltyFormVisible && (
                                 <Button onClick={() => setIsStatePenaltyFormVisible(true)}> Add Penalty</Button>
@@ -166,9 +171,9 @@ function WrittenTeamDetails() {
                         <Card.Header as='h2' className='fw-bold'>Victim Memorandum Details</Card.Header>
                         <Card.Body>
                             <p><strong>Scores:</strong> {victimMemorandum?.scoreValues?.length ? victimMemorandum.scoreValues.join(', ') : 'N/A'}</p>
-                            <p><strong>Average:</strong> {victimMemorandum?.averageScore ?? 'N/A'}</p>
+                            <p><strong>Average:</strong> {formatScore(victimMemorandum?.averageScore)}</p>
                             <p><strong>Penalty:</strong> {victimMemorandum?.penaltyPoints ? `-${victimMemorandum.penaltyPoints}` : 'None'}</p>
-                            <p><strong>Adjusted Score:</strong> {victimMemorandum?.adjustedScore ?? 'N/A'}</p>
+                            <p><strong>Adjusted Score:</strong> {formatScore(victimMemorandum?.adjustedScore)}</p>
 
                             {victimMemorandum && !victimMemorandum.penaltyPoints && !isVictimPenaltyFormVisible && (
                                 <Button onClick={() => setIsVictimPenaltyFormVisible(true)}> Add Penalty</Button>
