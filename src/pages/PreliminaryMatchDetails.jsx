@@ -15,6 +15,7 @@ function PreliminaryMatchDetails() {
 
     const [selectedWinningTeam, setSelectedWinningTeam] = useState('');
     const [isSavingWinner, setIsSavingWinner] = useState(false);
+    const [winnerUpdateMessage, setWinnerUpdateMessage] = useState(''); 
     const [winnerUpdateError, setWinnerUpdateError] = useState('');
 
     useEffect(() => {
@@ -39,6 +40,7 @@ function PreliminaryMatchDetails() {
 
         try {
             setIsSavingWinner(true);
+            setWinnerUpdateMessage(''); 
             setWinnerUpdateError('');
 
             await api.patch(`/api/admin/oral/preliminary-match/${matchID}/winner`, {
@@ -48,7 +50,10 @@ function PreliminaryMatchDetails() {
             setMatchDetails((previousMatchDetails) => ({
                 ...previousMatchDetails,
                 winningTeam: selectedWinningTeam
-            }))
+            }));
+
+            setWinnerUpdateMessage('Winning team updated successfully.'); 
+
         } catch (error) {
             console.error('Winner update error: ', error);
             setWinnerUpdateError('Failed to update winning team.');
@@ -112,9 +117,15 @@ function PreliminaryMatchDetails() {
                                 </Form.Group>
 
                                 <Button onClick={handleSaveWinner} disabled={isSavingWinner || !selectedWinningTeam}>{isSavingWinner ? 'Saving...' : 'Save Winner'}</Button>
+                                
+                                {winnerUpdateMessage && (
+                                    <p className='text-success fw-semibold mt-2'>{winnerUpdateMessage}</p>
+                                )}
+
                                 {winnerUpdateError && (
                                     <p className='text-danger fw-semibold mt-2'>{winnerUpdateError}</p>
                                 )}
+
                             </Card.Body>
                         </Card>
                     </>
