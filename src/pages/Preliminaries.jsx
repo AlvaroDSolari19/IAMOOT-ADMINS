@@ -2,93 +2,18 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Card, Form, Table } from 'react-bootstrap';
 
+import api from '../services/api';
+
 function Preliminaries() {
-
-    const preliminaryMatches = [
-        {
-            matchID: 'M1',
-            matchDay: 'Monday',
-            matchTime: '10:30 AM',
-            stateTeamID: '12',
-            stateUniversity: 'Universidad de Buenos Aires',
-            victimTeamID: '3',
-            victimUniversity: 'Harvard University',
-            matchClassroom: 'Room 101'
-        },
-        {
-            matchID: 'M2',
-            matchDay: 'Monday',
-            matchTime: '1:00 PM',
-            stateTeamID: '6',
-            stateUniversity: 'Universidad de Chile',
-            victimTeamID: '9',
-            victimUniversity: 'University of Oxford',
-            matchClassroom: 'Room 102'
-        },
-        {
-            matchID: 'T1',
-            matchDay: 'Tuesday',
-            matchTime: '10:30 AM',
-            stateTeamID: '18',
-            stateUniversity: 'Universidad Complutense de Madrid',
-            victimTeamID: '21',
-            victimUniversity: 'Pontifícia Universidade Católica do Rio de Janeiro',
-            matchClassroom: 'Room 201'
-        },
-        {
-            matchID: 'W1',
-            matchDay: 'Wednesday',
-            matchTime: '9:00 AM',
-            stateTeamID: '27',
-            stateUniversity: 'Universidade de São Paulo',
-            victimTeamID: '1',
-            victimUniversity: 'Georgetown University',
-            matchClassroom: 'Room 301'
-        }
-    ];
-
-    const preliminaryResults = [
-        {
-            teamID: '12',
-            universityName: 'Universidad de Buenos Aires',
-            numberOfWins: 2,
-            numberOfLosses: 0,
-            memorandumAverage: 87.85
-        },
-        {
-            teamID: '3',
-            universityName: 'Harvard University',
-            numberOfWins: 2,
-            numberOfLosses: 0,
-            memorandumAverage: 90.75
-        },
-        {
-            teamID: '27',
-            universityName: 'Universidade de São Paulo',
-            numberOfWins: 1,
-            numberOfLosses: 1,
-            memorandumAverage: 83.25
-        },
-        {
-            teamID: '1',
-            universityName: 'Georgetown University',
-            numberOfWins: 1,
-            numberOfLosses: 1,
-            memorandumAverage: 89.6
-        },
-        {
-            teamID: '18',
-            universityName: 'Universidad Complutense de Madrid',
-            numberOfWins: 0,
-            numberOfLosses: 2,
-            memorandumAverage: 88.55
-        }
-    ];
 
     const navigate = useNavigate();
 
     const [selectedView, setSelectedView] = useState('matches');
     const [selectedDay, setSelectedDay] = useState('ALL');
+
+    const [preliminaryMatches, setPreliminaryMatches] = useState([]);
+    const [isLoadingMatches, setIsLoadingMatches] = useState(true);
+    const [matchesError, setMatchesError] = useState('');
 
     useEffect(() => {
         const savedSelectedDay = sessionStorage.getItem('preliminaryMatchesSelectedDay');
@@ -96,6 +21,22 @@ function Preliminaries() {
 
         setSelectedDay(savedSelectedDay);
         sessionStorage.removeItem('preliminaryMatchesSelectedDay');
+    }, []);
+
+    useEffect(() => {
+        const getPreliminaryMatches = async () => {
+            try {
+                const preliminaryMatchesResponse = await api.get('/api/admin/oral/preliminary-matches');
+                setPreliminaryMatches(preliminaryMatchesResponse.data.preliminaryMatches || []);
+            } catch (error) {
+                console.error('Preliminary matches fetch error: ', error);
+                setMatchesError('Failed to load preliminary matches');
+            } finally {
+                setIsLoadingMatches(false);
+            }
+        }
+
+        getPreliminaryMatches();
     }, []);
 
     const filteredMatches = preliminaryMatches.filter((currentMatch) => {
@@ -111,18 +52,19 @@ function Preliminaries() {
         navigate(`/oral/preliminaries/match/${matchID}`);
     }
 
+    const preliminaryResults = [];
     const sortedResults = [...preliminaryResults].sort((firstTeam, secondTeam) => {
         if (firstTeam.numberOfWins !== secondTeam.numberOfWins) {
-            return secondTeam.numberOfWins - firstTeam.numberOfWins; 
+            return secondTeam.numberOfWins - firstTeam.numberOfWins;
         }
 
-        return secondTeam.memorandumAverage - firstTeam.memorandumAverage; 
+        return secondTeam.memorandumAverage - firstTeam.memorandumAverage;
     });
 
     const getRowClass = (currentTeam) => {
-        if (currentTeam.numberOfWins === 2) return 'table-success'; 
+        if (currentTeam.numberOfWins === 2) return 'table-success';
         if (currentTeam.numberOfLosses === 2) return 'table-danger';
-        return 'table-warning';  
+        return 'table-warning';
     }
 
     return (
@@ -158,31 +100,41 @@ function Preliminaries() {
                             </Form.Group>
                         </div>
 
-                        <Table striped bordered hover>
-                            <thead>
-                                <tr>
-                                    <th>Match ID</th>
-                                    <th>State</th>
-                                    <th>Victim</th>
-                                    <th>Day & Time</th>
-                                    <th>Classroom</th>
-                                    <th>Winner</th>
-                                </tr>
-                            </thead>
+                        {isLoadingMatches && (
+                            <p className='text-center fw-semibold'>Loading preliminary matches...</p>
+                        )}
 
-                            <tbody>
-                                {filteredMatches.map((currentMatch) => (
-                                    <tr key={currentMatch.matchID} style={{ cursor: 'pointer' }} onClick={() => handleMatchClick(currentMatch.matchID)}>
-                                        <td>{currentMatch.matchID}</td>
-                                        <td>{currentMatch.stateUniversity} ({currentMatch.stateTeamID})</td>
-                                        <td>{currentMatch.victimUniversity} ({currentMatch.victimTeamID})</td>
-                                        <td>{currentMatch.matchDay} at {currentMatch.matchTime}</td>
-                                        <td>{currentMatch.matchClassroom}</td>
-                                        <td>{currentMatch.winningTeamID ? 'Selected' : 'Pending'}</td>
+                        {matchesError && (
+                            <p className='text-center text-danger fw-semibold'>{matchesError}</p>
+                        )}
+
+                        {!isLoadingMatches && !matchesError && (
+                            <Table striped bordered hover>
+                                <thead>
+                                    <tr>
+                                        <th>Match ID</th>
+                                        <th>State</th>
+                                        <th>Victim</th>
+                                        <th>Day & Time</th>
+                                        <th>Classroom</th>
+                                        <th>Winner</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </Table>
+                                </thead>
+
+                                <tbody>
+                                    {filteredMatches.map((currentMatch) => (
+                                        <tr key={currentMatch.matchID} style={{ cursor: 'pointer' }} onClick={() => handleMatchClick(currentMatch.matchID)}>
+                                            <td>{currentMatch.matchID}</td>
+                                            <td>{currentMatch.stateTeamUniversity} ({currentMatch.stateTeam})</td>
+                                            <td>{currentMatch.victimTeamUniversity} ({currentMatch.victimTeam})</td>
+                                            <td>{currentMatch.matchDay} at {currentMatch.matchTime}</td>
+                                            <td>{currentMatch.roomNumber}</td>
+                                            <td>{currentMatch.winningTeam ? 'Selected' : 'Pending'}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </Table>
+                        )}
                     </>
                 )}
 
