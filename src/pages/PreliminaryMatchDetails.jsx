@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button, Card, Form } from 'react-bootstrap';
+import { Button, Card, Form, Table } from 'react-bootstrap';
 
 import api from '../services/api';
 
@@ -15,7 +15,7 @@ function PreliminaryMatchDetails() {
 
     const [selectedWinningTeam, setSelectedWinningTeam] = useState('');
     const [isSavingWinner, setIsSavingWinner] = useState(false);
-    const [winnerUpdateMessage, setWinnerUpdateMessage] = useState(''); 
+    const [winnerUpdateMessage, setWinnerUpdateMessage] = useState('');
     const [winnerUpdateError, setWinnerUpdateError] = useState('');
 
     useEffect(() => {
@@ -40,7 +40,7 @@ function PreliminaryMatchDetails() {
 
         try {
             setIsSavingWinner(true);
-            setWinnerUpdateMessage(''); 
+            setWinnerUpdateMessage('');
             setWinnerUpdateError('');
 
             await api.patch(`/api/admin/oral/preliminary-match/${matchID}/winner`, {
@@ -52,7 +52,7 @@ function PreliminaryMatchDetails() {
                 winningTeam: selectedWinningTeam
             }));
 
-            setWinnerUpdateMessage('Winning team updated successfully.'); 
+            setWinnerUpdateMessage('Winning team updated successfully.');
 
         } catch (error) {
             console.error('Winner update error: ', error);
@@ -95,11 +95,27 @@ function PreliminaryMatchDetails() {
                             <Card.Header as='h2' className='fw-bold'>Assigned Judges</Card.Header>
                             <Card.Body>
                                 {matchDetails.assignedJudges?.length > 0 ? (
-                                    matchDetails.assignedJudges.map((currentJudge) => (
-                                        <p key={currentJudge.judgeID}>{currentJudge.judgeName} (ID: {currentJudge.judgeID})</p>
-                                    ))
+                                    <Table striped bordered hover>
+                                        <thead>
+                                            <tr>
+                                                <th>Judge ID</th>
+                                                <th>Judge Name</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+
+                                        <tbody>
+                                            {matchDetails.assignedJudges.map((currentJudge) => (
+                                                <tr key={currentJudge.judgeID}>
+                                                    <td>{currentJudge.judgeID}</td>
+                                                    <td>{currentJudge.judgeName}</td>
+                                                    <td><Button variant='danger' size='sm'>Remove</Button></td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </Table>
                                 ) : (
-                                    <p>No judges assigned yet.</p>
+                                    <p>No judges assigned yet...</p>
                                 )}
                             </Card.Body>
                         </Card>
@@ -117,7 +133,7 @@ function PreliminaryMatchDetails() {
                                 </Form.Group>
 
                                 <Button onClick={handleSaveWinner} disabled={isSavingWinner || !selectedWinningTeam}>{isSavingWinner ? 'Saving...' : 'Save Winner'}</Button>
-                                
+
                                 {winnerUpdateMessage && (
                                     <p className='text-success fw-semibold mt-2'>{winnerUpdateMessage}</p>
                                 )}
