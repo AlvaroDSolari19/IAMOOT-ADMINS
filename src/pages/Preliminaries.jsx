@@ -127,7 +127,7 @@ function Preliminaries() {
                                             <td>{currentMatch.matchID}</td>
                                             <td>{currentMatch.stateTeamUniversity} ({currentMatch.stateTeam})</td>
                                             <td>{currentMatch.victimTeamUniversity} ({currentMatch.victimTeam})</td>
-                                            <td>{currentMatch.matchDay} at {currentMatch.matchTime}</td>
+                                            <td style={{ whiteSpace: 'nowrap'}}>{currentMatch.matchDay} at {currentMatch.matchTime}</td>
                                             <td>{currentMatch.roomNumber}</td>
                                             <td>{currentMatch.winningTeam ? 'Selected' : 'Pending'}</td>
                                         </tr>
