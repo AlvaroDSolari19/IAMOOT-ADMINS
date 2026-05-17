@@ -123,7 +123,7 @@ function Preliminaries() {
 
                                 <tbody>
                                     {filteredMatches.map((currentMatch) => (
-                                        <tr key={currentMatch.matchID}>
+                                        <tr key={currentMatch.matchID} style={{ cursor: 'pointer' }} onClick={() => handleMatchClick(currentMatch.matchID)}>
                                             <td style={{ whiteSpace: 'nowrap'}}>{currentMatch.matchID}</td>
                                             <td>{currentMatch.victimTeamUniversity} ({currentMatch.victimTeam})</td>
                                             <td>{currentMatch.stateTeamUniversity} ({currentMatch.stateTeam})</td>
