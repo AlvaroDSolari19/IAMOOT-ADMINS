@@ -113,8 +113,8 @@ function Preliminaries() {
                                 <thead>
                                     <tr>
                                         <th style={{ whiteSpace: 'nowrap'}}>Match ID</th>
-                                        <th>State</th>
-                                        <th >Victim</th>
+                                        <th>Victim</th>
+                                        <th >State</th>
                                         <th style={{ whiteSpace: 'nowrap'}}>Day & Time</th>
                                         <th style={{ whiteSpace: 'nowrap'}}>Classroom</th>
                                         <th style={{ whiteSpace: 'nowrap'}}>Winner</th>
@@ -123,10 +123,10 @@ function Preliminaries() {
 
                                 <tbody>
                                     {filteredMatches.map((currentMatch) => (
-                                        <tr key={currentMatch.matchID} style={{ cursor: 'pointer' }} onClick={() => handleMatchClick(currentMatch.matchID)}>
+                                        <tr key={currentMatch.matchID}>
                                             <td style={{ whiteSpace: 'nowrap'}}>{currentMatch.matchID}</td>
-                                            <td>{currentMatch.stateTeamUniversity} ({currentMatch.stateTeam})</td>
                                             <td>{currentMatch.victimTeamUniversity} ({currentMatch.victimTeam})</td>
+                                            <td>{currentMatch.stateTeamUniversity} ({currentMatch.stateTeam})</td>
                                             <td style={{ whiteSpace: 'nowrap'}}>{currentMatch.matchDay} at {currentMatch.matchTime}</td>
                                             <td style={{ whiteSpace: 'nowrap'}}>{currentMatch.roomNumber}</td>
                                             <td style={{ whiteSpace: 'nowrap'}}>{currentMatch.winningTeam ? 'Selected' : 'Pending'}</td>
