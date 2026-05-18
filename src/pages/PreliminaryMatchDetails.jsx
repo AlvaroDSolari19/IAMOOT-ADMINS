@@ -17,6 +17,7 @@ function PreliminaryMatchDetails() {
     const [judgeToRemove, setJudgeToRemove] = useState(null);
 
     const [judgeSearchValue, setJudgeSearchValue] = useState('');
+    const [matchingJudges, setMatchingJudges] = useState([]);
     const [selectedJudge, setSelectedJudge] = useState(null);
 
     const [selectedWinningTeam, setSelectedWinningTeam] = useState('');
@@ -40,12 +41,37 @@ function PreliminaryMatchDetails() {
         }
 
         getMatchDetails();
+
     }, [matchID]);
+
+    useEffect(() => {
+
+        const getMatchingJudges = async () => {
+
+            try {
+
+                if (!judgeSearchValue || selectedJudge) {
+                    setMatchingJudges([]);
+                    return;
+                }
+
+                const judgesResponse = await api.get(`/api/admin/oral/judges?judgeID=${judgeSearchValue}`);
+                setMatchingJudges(judgesResponse.data.matchingJudges || []);
+
+            } catch (error) {
+                console.error('Oral judges search error: ', error); 
+            }
+
+        }
+
+        getMatchingJudges();
+
+    }, [judgeSearchValue, selectedJudge]);
 
     const formatJudgeName = (judgeName) => {
         return judgeName.toLowerCase().split(' ').map((currentWord) => {
             return currentWord.charAt(0).toUpperCase() + currentWord.slice(1)
-        }).join(' '); 
+        }).join(' ');
     }
 
     const handleShowRemoveJudgeModal = (currentJudge) => {
@@ -84,16 +110,6 @@ function PreliminaryMatchDetails() {
         }
 
     }
-
-    const availableJudges = [
-        { judgeID: '1001', judgeName: 'Sample Judge One' },
-        { judgeID: '1002', judgeName: 'Sample Judge Two' },
-        { judgeID: '1003', judgeName: 'Sample Judge Three' }
-    ];
-
-    const filteredAvailableJudges = availableJudges.filter((currentJudge) => {
-        return currentJudge.judgeID.startsWith(judgeSearchValue);
-    });
 
     return (
         <div>
@@ -156,17 +172,17 @@ function PreliminaryMatchDetails() {
                                     <Form.Control type='text' placeholder='Search judge by ID' value={judgeSearchValue} onChange={(event) => setJudgeSearchValue(event.target.value)} />
                                     {judgeSearchValue && (
                                         <div className='mb-3'>
-                                            {filteredAvailableJudges.map((currentJudge) => (
+                                            {matchingJudges.map((currentJudge) => (
                                                 <Button
                                                     key={currentJudge.judgeID}
                                                     variant='outline-primary'
                                                     className='w-100 mb-2 text-start'
                                                     onClick={() => {
                                                         setSelectedJudge(currentJudge);
-                                                        setJudgeSearchValue(`${currentJudge.judgeID} - ${currentJudge.judgeName}`);
+                                                        setJudgeSearchValue(`${currentJudge.judgeID} - ${formatJudgeName(currentJudge.fullName)}`);
                                                     }}
                                                 >
-                                                    {currentJudge.judgeID} - {currentJudge.judgeName}
+                                                    {currentJudge.judgeID} - {formatJudgeName(currentJudge.fullName)}
                                                 </Button>
                                             ))}
                                         </div>
