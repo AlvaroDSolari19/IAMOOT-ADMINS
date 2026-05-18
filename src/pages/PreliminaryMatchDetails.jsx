@@ -59,7 +59,7 @@ function PreliminaryMatchDetails() {
                 setMatchingJudges(judgesResponse.data.matchingJudges || []);
 
             } catch (error) {
-                console.error('Oral judges search error: ', error); 
+                console.error('Oral judges search error: ', error);
             }
 
         }
@@ -70,8 +70,37 @@ function PreliminaryMatchDetails() {
 
     const formatJudgeName = (judgeName) => {
         return judgeName.toLowerCase().split(' ').map((currentWord) => {
-            return currentWord.charAt(0).toUpperCase() + currentWord.slice(1)
+            return currentWord.charAt(0).toUpperCase() + currentWord.slice(1);
         }).join(' ');
+    }
+
+    const handleAddJudge = async () => {
+
+        try {
+
+            await api.patch(`/api/admin/oral/preliminary-match/${matchID}/judges`, {
+                judgeID: selectedJudge.judgeID
+            });
+
+            setMatchDetails((previousMatchDetails) => ({
+                ...previousMatchDetails,
+                assignedJudges: [
+                    ...(previousMatchDetails.assignedJudges || []), 
+                    {
+                        judgeID: selectedJudge.judgeID, 
+                        judgeName: selectedJudge.fullName
+                    }
+                ]
+            }));
+
+            setSelectedJudge(null);
+            setJudgeSearchValue('');
+            setMatchingJudges([]);
+
+        } catch (error) {
+            console.error('Add judge error: ', error); 
+        }
+
     }
 
     const handleShowRemoveJudgeModal = (currentJudge) => {
@@ -189,7 +218,7 @@ function PreliminaryMatchDetails() {
                                     )}
                                 </Form.Group>
 
-                                <Button disabled={!selectedJudge}>Add Judge</Button>
+                                <Button onClick={handleAddJudge} disabled={!selectedJudge}>Add Judge</Button>
                             </Card.Body>
                         </Card>
 
