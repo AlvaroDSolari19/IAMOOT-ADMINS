@@ -93,7 +93,8 @@ function Preliminaries() {
     const getRowClass = (currentTeam) => {
         if (currentTeam.numberOfWins === 2) return 'table-success';
         if (currentTeam.numberOfLosses === 2) return 'table-danger';
-        return 'table-warning';
+        if (currentTeam.numberOfWins === 1 && currentTeam.numberOfLossess === 1) return 'table-warning'
+        return '';
     }
 
     return (
