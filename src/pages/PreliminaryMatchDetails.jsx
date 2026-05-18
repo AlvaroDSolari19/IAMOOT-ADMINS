@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button, Card, Form, Table } from 'react-bootstrap';
+import { Button, Card, Form, Modal, Table } from 'react-bootstrap';
 
 import api from '../services/api';
 
@@ -12,6 +12,12 @@ function PreliminaryMatchDetails() {
     const [matchDetails, setMatchDetails] = useState(null);
     const [isLoadingMatchDetails, setIsLoadingMatchDetails] = useState(true);
     const [matchDetailsError, setMatchDetailsError] = useState('');
+
+    const [showRemoveJudgeModal, setShowRemoveJudgeModal] = useState(false);
+    const [judgeToRemove, setJudgeToRemove] = useState(null);
+
+    const [judgeSearchValue, setJudgeSearchValue] = useState('');
+    const [selectedJudge, setSelectedJudge] = useState(null);
 
     const [selectedWinningTeam, setSelectedWinningTeam] = useState('');
     const [isSavingWinner, setIsSavingWinner] = useState(false);
@@ -35,6 +41,22 @@ function PreliminaryMatchDetails() {
 
         getMatchDetails();
     }, [matchID]);
+
+    const formatJudgeName = (judgeName) => {
+        return judgeName.toLowerCase().split(' ').map((currentWord) => {
+            return currentWord.charAt(0).toUpperCase() + currentWord.slice(1)
+        }).join(' '); 
+    }
+
+    const handleShowRemoveJudgeModal = (currentJudge) => {
+        setJudgeToRemove(currentJudge);
+        setShowRemoveJudgeModal(true);
+    }
+
+    const handleCloseRemoveJudgeModal = () => {
+        setShowRemoveJudgeModal(false);
+        setJudgeToRemove(null);
+    }
 
     const handleSaveWinner = async () => {
 
@@ -62,6 +84,16 @@ function PreliminaryMatchDetails() {
         }
 
     }
+
+    const availableJudges = [
+        { judgeID: '1001', judgeName: 'Sample Judge One' },
+        { judgeID: '1002', judgeName: 'Sample Judge Two' },
+        { judgeID: '1003', judgeName: 'Sample Judge Three' }
+    ];
+
+    const filteredAvailableJudges = availableJudges.filter((currentJudge) => {
+        return currentJudge.judgeID.startsWith(judgeSearchValue);
+    });
 
     return (
         <div>
@@ -108,8 +140,8 @@ function PreliminaryMatchDetails() {
                                             {matchDetails.assignedJudges.map((currentJudge) => (
                                                 <tr key={currentJudge.judgeID}>
                                                     <td>{currentJudge.judgeID}</td>
-                                                    <td>{currentJudge.judgeName}</td>
-                                                    <td><Button variant='danger' size='sm'>Remove</Button></td>
+                                                    <td>{formatJudgeName(currentJudge.judgeName)}</td>
+                                                    <td><Button variant='danger' size='sm' onClick={() => handleShowRemoveJudgeModal(currentJudge)}>Remove</Button></td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -117,6 +149,31 @@ function PreliminaryMatchDetails() {
                                 ) : (
                                     <p>No judges assigned yet...</p>
                                 )}
+                                <hr />
+
+                                <Form.Group className='mb-3'>
+                                    <Form.Label className='fw-bold'>Add Judge</Form.Label>
+                                    <Form.Control type='text' placeholder='Search judge by ID' value={judgeSearchValue} onChange={(event) => setJudgeSearchValue(event.target.value)} />
+                                    {judgeSearchValue && (
+                                        <div className='mb-3'>
+                                            {filteredAvailableJudges.map((currentJudge) => (
+                                                <Button
+                                                    key={currentJudge.judgeID}
+                                                    variant='outline-primary'
+                                                    className='w-100 mb-2 text-start'
+                                                    onClick={() => {
+                                                        setSelectedJudge(currentJudge);
+                                                        setJudgeSearchValue(`${currentJudge.judgeID} - ${currentJudge.judgeName}`);
+                                                    }}
+                                                >
+                                                    {currentJudge.judgeID} - {currentJudge.judgeName}
+                                                </Button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </Form.Group>
+
+                                <Button disabled={!selectedJudge}>Add Judge</Button>
                             </Card.Body>
                         </Card>
 
@@ -152,6 +209,23 @@ function PreliminaryMatchDetails() {
                 <Button onClick={() => navigate('/oral/preliminaries')}>Return to Preliminaries</Button>
                 <Button variant='danger' onClick={() => navigate('/')}>Logout</Button>
             </div>
+
+            <Modal show={showRemoveJudgeModal} onHide={handleCloseRemoveJudgeModal} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Remove Judge</Modal.Title>
+                </Modal.Header>
+
+                <Modal.Body>
+                    {judgeToRemove && (
+                        <p>Are you sure you want to remove <strong>{judgeToRemove.judgeID} - {judgeToRemove.judgeName}</strong> from Match {matchID}?</p>
+                    )}
+                </Modal.Body>
+
+                <Modal.Footer>
+                    <Button variant='secondary' onClick={handleCloseRemoveJudgeModal}>Cancel</Button>
+                    <Button variant='danger' onClick={handleCloseRemoveJudgeModal}>Remove Judge</Button>
+                </Modal.Footer>
+            </Modal>
 
         </div>
     )

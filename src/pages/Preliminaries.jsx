@@ -52,6 +52,11 @@ function Preliminaries() {
         navigate(`/oral/preliminaries/match/${matchID}`);
     }
 
+    const getWinningTeamDisplay = (currentMatch) => {
+        if (!currentMatch.winningTeam) return 'Pending'; 
+        return currentMatch.winningTeam;
+    }
+
     const preliminaryResults = [];
     const sortedResults = [...preliminaryResults].sort((firstTeam, secondTeam) => {
         if (firstTeam.numberOfWins !== secondTeam.numberOfWins) {
@@ -129,7 +134,7 @@ function Preliminaries() {
                                             <td>{currentMatch.stateTeamUniversity} ({currentMatch.stateTeam})</td>
                                             <td style={{ whiteSpace: 'nowrap'}}>{currentMatch.matchDay} at {currentMatch.matchTime}</td>
                                             <td style={{ whiteSpace: 'nowrap'}}>{currentMatch.roomNumber}</td>
-                                            <td style={{ whiteSpace: 'nowrap'}}>{currentMatch.winningTeam ? 'Selected' : 'Pending'}</td>
+                                            <td style={{ whiteSpace: 'nowrap'}}>{getWinningTeamDisplay(currentMatch)}</td>
                                         </tr>
                                     ))}
                                 </tbody>
