@@ -15,6 +15,10 @@ function Preliminaries() {
     const [isLoadingMatches, setIsLoadingMatches] = useState(true);
     const [matchesError, setMatchesError] = useState('');
 
+    const [preliminaryResults, setPreliminaryResults] = useState([]);
+    const [isLoadingResults, setIsLoadingResults] = useState(true);
+    const [resultsError, setResultsError] = useState('');
+
     useEffect(() => {
         const savedSelectedDay = sessionStorage.getItem('preliminaryMatchesSelectedDay');
         if (!savedSelectedDay) return;
@@ -39,6 +43,22 @@ function Preliminaries() {
         getPreliminaryMatches();
     }, []);
 
+    useEffect(() => {
+        const getPreliminaryResults = async () => {
+            try {
+                const preliminaryResultsResponse = await api.get('/api/admin/oral/preliminary-results');
+                setPreliminaryResults(preliminaryResultsResponse.data.preliminaryResults || []);
+            } catch (error) {
+                console.error('Preliminary results error: ', error);
+                setResultsError('Failed to load preliminary results.');
+            } finally {
+                setIsLoadingResults(false);
+            }
+        }
+
+        getPreliminaryResults();
+    }, []);
+
     const filteredMatches = preliminaryMatches.filter((currentMatch) => {
         if (selectedDay === 'ALL') {
             return true;
@@ -53,11 +73,15 @@ function Preliminaries() {
     }
 
     const getWinningTeamDisplay = (currentMatch) => {
-        if (!currentMatch.winningTeam) return 'Pending'; 
+        if (!currentMatch.winningTeam) return 'Pending';
         return currentMatch.winningTeam;
     }
 
-    const preliminaryResults = [];
+    const formatScore = (scoreValue) => {
+        if (scoreValue === null || scoreValue === undefined) return 'N/A'; 
+        return Number.isInteger(scoreValue) ? scoreValue : scoreValue.toFixed(2); 
+    }
+
     const sortedResults = [...preliminaryResults].sort((firstTeam, secondTeam) => {
         if (firstTeam.numberOfWins !== secondTeam.numberOfWins) {
             return secondTeam.numberOfWins - firstTeam.numberOfWins;
@@ -117,24 +141,24 @@ function Preliminaries() {
                             <Table striped bordered hover>
                                 <thead>
                                     <tr>
-                                        <th style={{ whiteSpace: 'nowrap'}}>Match ID</th>
+                                        <th style={{ whiteSpace: 'nowrap' }}>Match ID</th>
                                         <th>Victim</th>
-                                        <th >State</th>
-                                        <th style={{ whiteSpace: 'nowrap'}}>Day & Time</th>
-                                        <th style={{ whiteSpace: 'nowrap'}}>Classroom</th>
-                                        <th style={{ whiteSpace: 'nowrap'}}>Winner</th>
+                                        <th>State</th>
+                                        <th style={{ whiteSpace: 'nowrap' }}>Day & Time</th>
+                                        <th style={{ whiteSpace: 'nowrap' }}>Classroom</th>
+                                        <th style={{ whiteSpace: 'nowrap' }}>Winner</th>
                                     </tr>
                                 </thead>
 
                                 <tbody>
                                     {filteredMatches.map((currentMatch) => (
                                         <tr key={currentMatch.matchID} style={{ cursor: 'pointer' }} onClick={() => handleMatchClick(currentMatch.matchID)}>
-                                            <td style={{ whiteSpace: 'nowrap'}}>{currentMatch.matchID}</td>
+                                            <td style={{ whiteSpace: 'nowrap' }}>{currentMatch.matchID}</td>
                                             <td>{currentMatch.victimTeamUniversity} ({currentMatch.victimTeam})</td>
                                             <td>{currentMatch.stateTeamUniversity} ({currentMatch.stateTeam})</td>
-                                            <td style={{ whiteSpace: 'nowrap'}}>{currentMatch.matchDay} at {currentMatch.matchTime}</td>
-                                            <td style={{ whiteSpace: 'nowrap'}}>{currentMatch.roomNumber}</td>
-                                            <td style={{ whiteSpace: 'nowrap'}}>{getWinningTeamDisplay(currentMatch)}</td>
+                                            <td style={{ whiteSpace: 'nowrap' }}>{currentMatch.matchDay} at {currentMatch.matchTime}</td>
+                                            <td style={{ whiteSpace: 'nowrap' }}>{currentMatch.roomNumber}</td>
+                                            <td style={{ whiteSpace: 'nowrap' }}>{getWinningTeamDisplay(currentMatch)}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -144,29 +168,41 @@ function Preliminaries() {
                 )}
 
                 {selectedView === 'results' && (
-                    <Table striped bordered hover>
-                        <thead>
-                            <tr>
-                                <th>Team ID</th>
-                                <th>University</th>
-                                <th>Wins</th>
-                                <th>Losses</th>
-                                <th>Memorandum Average</th>
-                            </tr>
-                        </thead>
+                    <>
+                        {isLoadingResults && (
+                            <p className='text-center fw-semibold'>Loading preliminary results...</p>
+                        )}
 
-                        <tbody>
-                            {sortedResults.map((currentTeam) => (
-                                <tr key={currentTeam.teamID} className={getRowClass(currentTeam)}>
-                                    <td>{currentTeam.teamID}</td>
-                                    <td>{currentTeam.universityName}</td>
-                                    <td>{currentTeam.numberOfWins}</td>
-                                    <td>{currentTeam.numberOfLosses}</td>
-                                    <td>{currentTeam.memorandumAverage}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </Table>
+                        {resultsError && (
+                            <p className='text-center text-danger fw-semibold'>{resultsError}</p>
+                        )}
+
+                        {!isLoadingResults && !resultsError && (
+                            <Table striped bordered hover>
+                                <thead>
+                                    <tr>
+                                        <th>Team ID</th>
+                                        <th>University</th>
+                                        <th>Wins</th>
+                                        <th>Losses</th>
+                                        <th>Memorandum Average</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    {sortedResults.map((currentTeam) => (
+                                        <tr key={currentTeam.teamID} className={getRowClass(currentTeam)}>
+                                            <td>{currentTeam.teamID}</td>
+                                            <td>{currentTeam.universityName}</td>
+                                            <td>{currentTeam.numberOfWins}</td>
+                                            <td>{currentTeam.numberOfLosses}</td>
+                                            <td>{formatScore(currentTeam.memorandumAverage)}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </Table>
+                        )}
+                    </>
                 )}
             </div>
 

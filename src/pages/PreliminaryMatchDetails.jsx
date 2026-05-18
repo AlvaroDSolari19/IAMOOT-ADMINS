@@ -192,7 +192,7 @@ function PreliminaryMatchDetails() {
                         </Card>
 
                         <Card className='mb-3'>
-                            <Card.Header as='h2' className='fw-bold'>Assigned Judges</Card.Header>
+                            <Card.Header as='h2' className='fw-bold'>Assigned Judges ({matchDetails.assignedJudges?.length || 0})</Card.Header>
                             <Card.Body>
                                 {matchDetails.assignedJudges?.length > 0 ? (
                                     <Table striped bordered hover>
