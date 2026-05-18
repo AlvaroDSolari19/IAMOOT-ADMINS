@@ -108,6 +108,29 @@ function PreliminaryMatchDetails() {
         setShowRemoveJudgeModal(true);
     }
 
+    const handleRemoveJudge = async () => {
+
+        try {
+
+            await api.patch(`/api/admin/oral/preliminary-match/${matchID}/judges/remove`, {
+                judgeID: judgeToRemove.judgeID
+            });
+
+            setMatchDetails((previousMatchDetails) => ({
+                ...previousMatchDetails, 
+                assignedJudges: previousMatchDetails.assignedJudges.filter((currentJudge) => {
+                    return currentJudge.judgeID !== judgeToRemove.judgeID; 
+                })
+            }));
+
+            handleCloseRemoveJudgeModal(); 
+
+        } catch (error) {
+            console.error('Remove judge error: ', error); 
+        }
+
+    }
+
     const handleCloseRemoveJudgeModal = () => {
         setShowRemoveJudgeModal(false);
         setJudgeToRemove(null);
@@ -268,7 +291,7 @@ function PreliminaryMatchDetails() {
 
                 <Modal.Footer>
                     <Button variant='secondary' onClick={handleCloseRemoveJudgeModal}>Cancel</Button>
-                    <Button variant='danger' onClick={handleCloseRemoveJudgeModal}>Remove Judge</Button>
+                    <Button variant='danger' onClick={handleRemoveJudge}>Remove Judge</Button>
                 </Modal.Footer>
             </Modal>
 
